@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vibe Code Rescue — fix the app AI built and production broke</title>
+<meta name="description" content="Your app ran fine on your laptop. It fell apart the moment real users showed up. 48-hour audit for $150 — money back if I find nothing serious.">
+<link rel="canonical" href="https://rescue.soyuz.my.id/">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#F4F1E8">
+
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://rescue.soyuz.my.id/">
+<meta property="og:site_name" content="Vibe Code Rescue">
+<meta property="og:title" content="Vibe Code Rescue — fix the app AI built and production broke">
+<meta property="og:description" content="48-hour audit of an AI-built app. Leaked keys, dead auth, broken forms, silent integrations. $150 flat, money back if I find nothing serious.">
+<meta property="og:image" content="https://rescue.soyuz.my.id/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Vibe Code Rescue — 48-hour audit of an AI-built app, $150 flat.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Vibe Code Rescue — fix the app AI built and production broke">
+<meta name="twitter:description" content="48-hour audit of an AI-built app. $150 flat, money back if I find nothing serious.">
+<meta name="twitter:image" content="https://rescue.soyuz.my.id/og.png">
+
+<style>
+  /* ── Brutalist tokens ────────────────────────────────────────────
+     Neutral base + two loud accents. Black for every line of text,
+     every border and every shadow — no grays, no gradients.
+     Radius is always 0. Shadows are solid ink, zero blur.          */
+  :root{
+    --paper:#F4F1E8;
+    --white:#FFFFFF;
+    --ink:#000000;
+    --red:#FF3B30;
+    --yellow:#FFD23F;
+    --bd:4px;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"DejaVu Sans Mono","Courier New",monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;background:var(--paper);color:var(--ink);
+    font:17px/1.6 var(--sans);
+    overflow-wrap:break-word;
+  }
+  .wrap{
+    width:100%;max-width:1120px;margin:0 auto;
+    padding-left:32px;padding-right:32px;
+    border-left:var(--bd) solid var(--ink);border-right:var(--bd) solid var(--ink);
+  }
+  @media(max-width:679px){ .wrap{border-left:0;border-right:0;padding-left:18px;padding-right:18px} }
+
+  /* ── Ticker ──────────────────────────────────────────────────── */
+  .ticker{background:var(--ink);color:var(--paper);overflow:hidden;padding:9px 0}
+  .ticker-track{display:flex;width:max-content;animation:ticker 48s linear infinite}
+  .ticker-run{display:flex;white-space:nowrap}
+  .ticker-run span{
+    font:700 12px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;
+    padding:0 14px;
+  }
+  @keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+  /* ── Type ────────────────────────────────────────────────────── */
+  h1,h2,h3{font-family:var(--mono);text-transform:uppercase;font-weight:700;margin:0}
+  h1{
+    font-size:clamp(30px,7.4vw,60px);line-height:1;letter-spacing:-.035em;
+    margin:0 0 22px;
+  }
+  h1 em{
+    font-style:normal;background:var(--yellow);
+    box-shadow:6px 6px 0 var(--ink);padding:2px 10px;display:inline-block;
+  }
+  h2{
+    font-size:clamp(21px,4.4vw,33px);line-height:1.06;letter-spacing:-.03em;
+    margin:0 0 14px;display:flex;flex-wrap:wrap;gap:14px;align-items:baseline;
+  }
+  .num{
+    background:var(--ink);color:var(--paper);font-size:.52em;
+    padding:4px 8px;letter-spacing:.08em;flex:0 0 auto;
+  }
+  h3{font-size:20px;letter-spacing:-.02em}
+  p{margin:0 0 14px}
+  .kicker{
+    display:inline-block;font:700 12px/1 var(--mono);letter-spacing:.16em;
+    text-transform:uppercase;border:3px solid var(--ink);padding:7px 11px;
+    margin:0 0 26px;background:var(--white);box-shadow:4px 4px 0 var(--ink);
+  }
+  .sub{font-size:clamp(17px,2.4vw,20px);max-width:62ch;margin:0 0 30px}
+  .sub strong{background:var(--yellow);padding:1px 4px}
+  .lede{max-width:64ch;margin:0 0 30px}
+  a{color:var(--ink);text-decoration-thickness:3px;text-underline-offset:3px}
+  a:focus-visible,summary:focus-visible,.btn:focus-visible{
+    outline:var(--bd) solid var(--red);outline-offset:3px;
+  }
+
+  /* ── Buttons: border + flat fill + hard shadow. Push on click. ── */
+  .btns{display:flex;flex-wrap:wrap;gap:18px}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;
+    min-height:52px;padding:14px 24px;border:var(--bd) solid var(--ink);
+    border-radius:0;background:var(--white);color:var(--ink);
+    font:700 15px/1.2 var(--mono);text-transform:uppercase;letter-spacing:.05em;
+    text-decoration:none;text-align:center;cursor:pointer;
+    box-shadow:6px 6px 0 var(--ink);
+    transition:transform .08s linear,box-shadow .08s linear;
+  }
+  .btn:hover{transform:translate(-2px,-2px);box-shadow:8px 8px 0 var(--ink)}
+  .btn:active{transform:translate(6px,6px);box-shadow:0 0 0 var(--ink)}
+  .btn-red{background:var(--red)}
+  .btn-yellow{background:var(--yellow)}
+  .email-line{font:700 13px/1.5 var(--mono);letter-spacing:.02em;margin:24px 0 0}
+  .email-line b{border-bottom:3px solid var(--ink)}
+  @media(max-width:479px){
+    .btns{flex-direction:column;align-items:stretch}
+    .btns .btn{width:100%}
+  }
+
+  /* ── Layout ──────────────────────────────────────────────────── */
+  header{padding:clamp(44px,7vw,60px) 32px clamp(40px,6vw,52px);
+         border-bottom:var(--bd) solid var(--ink)}
+  main{display:block}
+  section{padding:clamp(48px,7vw,60px) 32px;border-bottom:var(--bd) solid var(--ink)}
+  section[id]{scroll-margin-top:16px}
+  .box{
+    background:var(--white);border:var(--bd) solid var(--ink);border-radius:0;
+    box-shadow:8px 8px 0 var(--ink);padding:clamp(20px,4vw,28px);
+  }
+
+  /* ── Who you're hiring ───────────────────────────────────────── */
+  .who{display:grid;gap:26px;grid-template-columns:minmax(0,1fr);align-items:start}
+  @media(min-width:700px){ .who{grid-template-columns:176px minmax(0,1fr);gap:32px} }
+  .who img{
+    width:176px;height:176px;object-fit:cover;display:block;border-radius:0;
+    border:var(--bd) solid var(--ink);box-shadow:8px 8px 0 var(--ink);
+  }
+  .who .name{font-family:var(--mono);text-transform:uppercase;font-weight:700;
+             font-size:22px;letter-spacing:-.02em;margin:0 0 6px}
+  .who .role{font:700 12px/1.5 var(--mono);letter-spacing:.1em;text-transform:uppercase;
+             margin:0 0 18px}
+  .links{display:flex;flex-wrap:wrap;gap:12px;margin-top:22px}
+  .links a{
+    display:inline-flex;align-items:center;min-height:44px;padding:9px 14px;
+    border:3px solid var(--ink);border-radius:0;background:var(--white);
+    font:700 12px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;
+    text-decoration:none;box-shadow:4px 4px 0 var(--ink);
+    transition:transform .08s linear,box-shadow .08s linear;
+  }
+  .links a:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink)}
+  .links a:active{transform:translate(4px,4px);box-shadow:0 0 0 var(--ink)}
+
+  /* ── Five things ─────────────────────────────────────────────── */
+  .list{list-style:none;margin:0;padding:0;display:grid;gap:18px}
+  .list li{
+    background:var(--white);border:var(--bd) solid var(--ink);border-radius:0;
+    box-shadow:6px 6px 0 var(--ink);padding:18px 20px;
+    display:flex;gap:16px;align-items:flex-start;
+  }
+  .list .n{
+    flex:0 0 32px;height:32px;background:var(--ink);color:var(--paper);
+    font:700 14px/1 var(--mono);display:flex;align-items:center;
+    justify-content:center;margin-top:2px;
+  }
+  .list b{display:block;font-family:var(--mono);text-transform:uppercase;
+          letter-spacing:-.01em;font-size:16px;margin-bottom:4px}
+  .list span span{display:block;font-size:15px}
+
+  /* ── Sample report ───────────────────────────────────────────── */
+  .report{background:var(--white);border:var(--bd) solid var(--ink);
+          box-shadow:10px 10px 0 var(--ink);overflow:hidden}
+  .report-head{
+    display:flex;flex-wrap:wrap;gap:12px;align-items:center;
+    justify-content:space-between;padding:14px 20px;
+    border-bottom:var(--bd) solid var(--ink);background:var(--ink);color:var(--paper);
+  }
+  .report-head .tag{font:700 11px/1.4 var(--mono);letter-spacing:.16em;text-transform:uppercase}
+  .sev{
+    font:700 11px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;
+    background:var(--yellow);color:var(--ink);border:3px solid var(--ink);padding:6px 9px;
+  }
+  .report-body{padding:clamp(18px,4vw,24px)}
+  .report-body dl{margin:0;display:grid;grid-template-columns:minmax(0,1fr);gap:20px}
+  .report-body dt,.report-body dd{min-width:0}
+  .report-body dt{
+    font:700 11px/1.4 var(--mono);letter-spacing:.16em;text-transform:uppercase;
+    margin-bottom:6px;padding-bottom:4px;border-bottom:3px solid var(--ink);
+  }
+  .report-body dd{margin:0;font-size:15px}
+  .report-body code{
+    font:700 13.5px/1.5 var(--mono);background:var(--yellow);
+    border:2px solid var(--ink);padding:1px 6px;
+  }
+  .report-body pre{
+    margin:0;background:var(--paper);border:3px solid var(--ink);
+    padding:14px 16px;overflow-x:auto;
+    font:13.5px/1.55 var(--mono);
+  }
+  .report-body pre b{background:var(--red);color:var(--ink);padding:0 4px}
+  .report-note{font-size:15px;margin:22px 0 0;max-width:64ch}
+
+  /* ── Pricing ─────────────────────────────────────────────────── */
+  .grid{display:grid;gap:22px}
+  @media(min-width:800px){ .grid-3{grid-template-columns:repeat(3,1fr)} }
+  .card{
+    background:var(--white);border:var(--bd) solid var(--ink);border-radius:0;
+    box-shadow:8px 8px 0 var(--ink);padding:clamp(20px,4vw,26px);
+    display:flex;flex-direction:column;
+  }
+  .price{font:700 34px/1 var(--mono);letter-spacing:-.04em;margin:14px 0 4px}
+  .price small{font-size:15px;letter-spacing:.02em}
+  .meta{font:700 11px/1.5 var(--mono);letter-spacing:.14em;text-transform:uppercase;
+        margin:0 0 18px}
+  .card ul{margin:0 0 24px;padding:0;list-style:none;font-size:15px}
+  .card li{padding:0 0 8px 20px;position:relative}
+  .card li::before{content:"";position:absolute;left:0;top:9px;width:10px;height:10px;
+                   background:var(--ink)}
+  .card .btn{margin-top:auto;width:100%}
+  .featured{background:var(--yellow);position:relative;box-shadow:12px 12px 0 var(--ink)}
+  .badge{
+    position:absolute;top:-16px;left:20px;background:var(--ink);color:var(--paper);
+    font:700 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;
+    padding:7px 11px;transform:rotate(-2deg);border:3px solid var(--ink);
+  }
+
+  /* ── Steps ───────────────────────────────────────────────────── */
+  .steps{counter-reset:s;list-style:none;margin:0;padding:0;display:grid;gap:18px}
+  .steps li{
+    counter-increment:s;position:relative;background:var(--white);
+    border:var(--bd) solid var(--ink);box-shadow:6px 6px 0 var(--ink);
+    padding:20px 20px 20px 78px;
+  }
+  .steps li::before{
+    content:counter(s,decimal-leading-zero);position:absolute;left:20px;top:20px;
+    width:40px;height:40px;background:var(--ink);color:var(--paper);
+    font:700 15px/1 var(--mono);display:flex;align-items:center;justify-content:center;
+  }
+  .steps b{display:block;font-family:var(--mono);text-transform:uppercase;
+           letter-spacing:-.01em;font-size:16px;margin-bottom:5px}
+  .steps span{display:block;font-size:15px}
+
+  /* ── Guarantee ───────────────────────────────────────────────── */
+  .guarantee{background:var(--yellow);border:var(--bd) solid var(--ink);
+             box-shadow:10px 10px 0 var(--ink);padding:clamp(22px,4vw,32px)}
+  .guarantee h2{margin-bottom:12px}
+  .guarantee b{background:var(--white);padding:1px 5px}
+
+  /* ── FAQ ─────────────────────────────────────────────────────── */
+  details{
+    background:var(--white);border:var(--bd) solid var(--ink);
+    box-shadow:6px 6px 0 var(--ink);margin:0 0 18px;
+  }
+  details summary{
+    cursor:pointer;list-style:none;display:flex;align-items:center;
+    justify-content:space-between;gap:18px;min-height:56px;padding:16px 20px;
+    font:700 15px/1.4 var(--mono);text-transform:uppercase;letter-spacing:-.01em;
+  }
+  details summary::-webkit-details-marker{display:none}
+  details summary::after{
+    content:"+";flex:0 0 30px;height:30px;background:var(--ink);color:var(--paper);
+    font:700 20px/1 var(--mono);display:flex;align-items:center;justify-content:center;
+  }
+  details[open] summary::after{content:"\2212"}
+  details[open] summary{border-bottom:var(--bd) solid var(--ink)}
+  details p{margin:0;padding:18px 20px;font-size:15px}
+
+  /* ── CTA ─────────────────────────────────────────────────────── */
+  .cta{background:var(--red)}
+  .cta h2{font-size:clamp(24px,5.6vw,44px);display:block;margin-bottom:16px}
+  .cta .lede{max-width:56ch}
+  .cta .btns{margin-bottom:20px}
+  .paynote{font:700 12px/1.6 var(--mono);letter-spacing:.06em;text-transform:uppercase;
+           max-width:70ch;margin:0}
+
+  /* ── Footer ──────────────────────────────────────────────────── */
+  footer{background:var(--ink);color:var(--paper);padding:clamp(34px,6vw,48px) 0}
+  footer .inner{width:100%;max-width:1120px;margin:0 auto;padding:0 32px}
+  @media(max-width:679px){ footer .inner{padding:0 18px} }
+  footer p{margin:0 0 14px;font-size:15px}
+  footer a{color:var(--paper);font-weight:700}
+  .honest{
+    border:3px solid var(--paper);padding:16px 18px;font-size:15px;
+    margin:0 0 26px;max-width:70ch;
+  }
+  .honest b{background:var(--yellow);color:var(--ink);padding:1px 5px}
+  .foot-links{display:flex;flex-wrap:wrap;gap:10px 24px;margin:6px 0 0}
+  .foot-links a{display:inline-flex;align-items:center;min-height:44px;
+                font:700 12px/1 var(--mono);letter-spacing:.12em;
+                text-transform:uppercase;text-decoration:none;
+                border-bottom:3px solid var(--paper)}
+  .foot-links a:hover{background:var(--yellow);color:var(--ink);border-color:var(--yellow)}
+
+  @media (prefers-reduced-motion: reduce){
+    .ticker-track{animation:none}
+    .btn,.links a{transition:none}
+    .btn:hover,.links a:hover{transform:none}
+  }
+</style>
+</head>
+<body>
+
+<div class="ticker" aria-hidden="true">
+  <div class="ticker-track">
+    <div class="ticker-run">
+      <span>Vibe Code Rescue</span><span>//</span><span>48-hour audit — $150 flat</span><span>//</span><span>Leaked API keys</span><span>//</span><span>Dead auth</span><span>//</span><span>Broken forms</span><span>//</span><span>Silent integrations</span><span>//</span><span>Money back if nothing serious</span><span>//</span>
+    </div>
+    <div class="ticker-run">
+      <span>Vibe Code Rescue</span><span>//</span><span>48-hour audit — $150 flat</span><span>//</span><span>Leaked API keys</span><span>//</span><span>Dead auth</span><span>//</span><span>Broken forms</span><span>//</span><span>Silent integrations</span><span>//</span><span>Money back if nothing serious</span><span>//</span>
+    </div>
+  </div>
+</div>
+
+<header class="wrap">
+  <p class="kicker">Vibe Code Rescue</p>
+  <h1>It worked on your laptop.<br>Then <em>real users</em> showed up.</h1>
+  <p class="sub">
+    I'm Asep, a solo developer. AI builders (Lovable, Bolt, v0, Cursor) get you a
+    demo fast — then production finds the leaked keys, the dead auth, and the
+    integrations that fail silently. <strong>I find them and I fix them.</strong>
+  </p>
+  <div class="btns">
+    <a class="btn btn-red" href="#pricing">Start with a $150 audit</a>
+    <a class="btn" href="#fixes">What I actually fix</a>
+  </div>
+  <p class="email-line">No mail client on this device? Write to <b>asepp.saepudiin&#64;gmail.com</b></p>
+</header>
+
+<main>
+
+<section class="wrap" id="who">
+  <h2><span class="num">01</span> Who you're hiring</h2>
+  <p class="lede">Not an agency, not a marketplace — one developer who reads the
+    code and tells you plainly what's wrong with it.</p>
+  <div class="who">
+    <img src="/asep.jpg" width="400" height="400" alt="Asep Saepudin">
+    <div>
+      <p class="name">Asep Saepudin</p>
+      <p class="role">Frontend developer · Tangerang Selatan, Indonesia</p>
+      <p>
+        I've been building web apps since 2022 — currently the frontend of an
+        EMR/SIMRS system at PT Data Integrasi Inovasi, and before that superapp
+        microservices and online learning platforms. React, Next.js and Node.js
+        most days; PostgreSQL, MongoDB and Prisma underneath.
+      </p>
+      <p>
+        I read AI-generated code the same way I read any other code: line by line,
+        looking for what breaks once real traffic and real money are involved.
+        Everything I claim on this page you can check against the links below,
+        before you pay me anything.
+      </p>
+      <div class="links">
+        <a href="https://github.com/soyuzalpha" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://linkedin.com/in/aseppp" target="_blank" rel="noopener">LinkedIn</a>
+        <a href="https://profile.soyuz.my.id" target="_blank" rel="noopener">Portfolio</a>
+        <a href="mailto:asepp.saepudiin@gmail.com">Email</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="wrap" id="fixes">
+  <h2><span class="num">02</span> Five things I keep fixing</h2>
+  <p class="lede">These are the ones that come up again and again in AI-built apps.
+    If yours has one, you're not unlucky — it's normal.</p>
+  <ul class="list">
+    <li><span class="n">1</span><span><b>API keys leaking in the page source</b>
+      <span>Secrets shipped into the browser bundle where anyone can read them — and billed to you.</span></span></li>
+    <li><span class="n">2</span><span><b>Broken auth / Supabase RLS off</b>
+      <span>Everyone can read everyone's data, or nobody can log in at all.</span></span></li>
+    <li><span class="n">3</span><span><b>Deploy and DNS chaos</b>
+      <span>Wrong env vars in production, stale builds, domain pointing at the wrong place.</span></span></li>
+    <li><span class="n">4</span><span><b>Forms that don't work</b>
+      <span>They look fine, they submit nothing, and you never hear about the lost leads.</span></span></li>
+    <li><span class="n">5</span><span><b>Dead integrations</b>
+      <span>Stripe, webhooks and third-party APIs failing silently — no error, no payment, no clue.</span></span></li>
+  </ul>
+</section>
+
+<section class="wrap" id="sample">
+  <h2><span class="num">03</span> What the report actually looks like</h2>
+  <p class="lede">No jargon, no vague "security concerns". Every finding comes with
+    the command that proves it, what it costs you, and what the fix takes.</p>
+
+  <div class="report">
+    <div class="report-head">
+      <span class="tag">Sample report — one finding, illustrated</span>
+      <span class="sev">Severity: High</span>
+    </div>
+    <div class="report-body">
+      <dl>
+        <div>
+          <dt>Finding</dt>
+          <dd>Stripe webhook returns 500 — orders are never created</dd>
+        </div>
+        <div>
+          <dt>Where</dt>
+          <dd><code>/api/webhooks/stripe</code></dd>
+        </div>
+        <div>
+          <dt>Evidence</dt>
+          <dd><pre>$ curl -sI -X POST https://your-app.com/api/webhooks/stripe
+<b>HTTP/2 500</b>
+
+Stripe dashboard → Webhooks → endpoint
+  last 12 events: <b>all failed</b>, retried for 3 days, then gave up</pre></dd>
+        </div>
+        <div>
+          <dt>Impact</dt>
+          <dd>12 payments succeeded in Stripe, 0 orders created in the app.
+            Money collected, nothing delivered and no record of it.</dd>
+        </div>
+        <div>
+          <dt>Fix</dt>
+          <dd>The webhook signing secret in production doesn't match the one in
+            Stripe. Rotate to the live secret, then replay the failed events so the
+            missing orders get created.</dd>
+        </div>
+        <div>
+          <dt>Estimate</dt>
+          <dd>3 hours</dd>
+        </div>
+      </dl>
+    </div>
+  </div>
+
+  <p class="report-note">This is a worked example of the format, using one of the
+    five issues above — not a past client's data. You get the same layout with your
+    own app's findings, each one with its own evidence.</p>
+  <p class="report-note"><a href="/case-study/"><b>Read a real one →</b> the full audit
+    report from a live app, published exactly as delivered: 6 findings, 3 High, every
+    one with the terminal output that proves it.</a></p>
+</section>
+
+<section class="wrap" id="pricing">
+  <h2><span class="num">04</span> Three ways to work with me</h2>
+  <p class="lede">Pick the audit if you don't know what's broken. Pick the fix if you do.
+    The audit fee is credited in full against the fix.</p>
+  <div class="grid grid-3">
+
+    <div class="card">
+      <h3>Audit</h3>
+      <p class="price">$150 <small>flat</small></p>
+      <p class="meta">48 hours · written report</p>
+      <ul>
+        <li>What's broken, in plain language</li>
+        <li>What it risks (data loss, leaks, lost sales)</li>
+        <li>What each fix costs, itemized</li>
+        <li>Credited in full if you go ahead with a fix</li>
+      </ul>
+      <a class="btn" href="mailto:asepp.saepudiin@gmail.com?subject=Vibe%20Code%20Rescue%20-%20audit">Start the audit</a>
+    </div>
+
+    <div class="card featured">
+      <span class="badge">Most useful</span>
+      <h3>Rescue Fix</h3>
+      <p class="price">$600–1,200 <small>flat</small></p>
+      <p class="meta">1 week · critical issues only</p>
+      <ul>
+        <li>Leaked secrets rotated, auth repaired</li>
+        <li>Deploy, DNS and env fixed for real</li>
+        <li>Forms and integrations made to work</li>
+        <li>Fixed scope, fixed price — no hourly surprises</li>
+      </ul>
+      <a class="btn btn-red" href="mailto:asepp.saepudiin@gmail.com?subject=Vibe%20Code%20Rescue%20-%20rescue%20fix">Start a rescue fix</a>
+    </div>
+
+    <div class="card">
+      <h3>Keep-Alive Retainer</h3>
+      <p class="price">$300 <small>/month</small></p>
+      <p class="meta">ongoing · monitoring + repairs</p>
+      <ul>
+        <li>Uptime and error monitoring</li>
+        <li>Monthly security and dependency check</li>
+        <li>A set number of fix hours each month</li>
+        <li>Direct line when something breaks</li>
+      </ul>
+      <a class="btn" href="mailto:asepp.saepudiin@gmail.com?subject=Vibe%20Code%20Rescue%20-%20retainer">Ask about the retainer</a>
+    </div>
+
+  </div>
+</section>
+
+<section class="wrap" id="process">
+  <h2><span class="num">05</span> How it works</h2>
+  <p class="lede">You know the price and the scope before anything is charged, and
+    the audit never changes your code.</p>
+  <ol class="steps">
+    <li>
+      <b>You email me what's happening</b>
+      <span>What the app does, what broke, and the live URL or repo if you have one.
+        A screenshot of the error is plenty to start.</span>
+    </li>
+    <li>
+      <b>I tell you what I'll check and what it costs</b>
+      <span>Fixed price, written down, before you pay or hand over access. If a
+        five-minute answer solves it, I'll just tell you that instead.</span>
+    </li>
+    <li>
+      <b>You give read access — or a screen-share</b>
+      <span>Repository, live URL, and the hosting or database dashboard. Rather not
+        hand over credentials? Screen-share works the same.</span>
+    </li>
+    <li>
+      <b>48 hours later you get the report</b>
+      <span>Findings with evidence, impact in plain language, and an itemized fix
+        cost for each. Then you decide what happens next — nothing is automatic.</span>
+    </li>
+  </ol>
+</section>
+
+<section class="wrap">
+  <div class="guarantee">
+    <h2><span class="num">06</span> Money-back guarantee</h2>
+    <p style="margin:0">
+      If I run the 48-hour audit and find <b>nothing serious</b>, you get your $150 back.
+      You keep the report either way. I'd rather refund an audit than sell you a fix
+      you don't need.
+    </p>
+  </div>
+</section>
+
+<section class="wrap">
+  <h2><span class="num">07</span> Questions</h2>
+  <div>
+    <details>
+      <summary>My app was built with Lovable / Bolt / v0 — can you still help?</summary>
+      <p>Yes. That's the whole point. Those tools generate working code; what they
+        don't do is harden it for production. I read the code they produce and fix
+        what it left exposed.</p>
+    </details>
+    <details>
+      <summary>What do you need from me to start?</summary>
+      <p>Read access to the code repository, the live URL, and access to the hosting
+        and database dashboards (or a screen-share if you'd rather not hand over
+        credentials). No code changes happen during the audit — it's read-only.</p>
+    </details>
+    <details>
+      <summary>How long does it take?</summary>
+      <p>The audit is delivered within 48 hours of getting access. A rescue fix is
+        typically one week, depending on how much is broken. I'll tell you up front
+        if it needs longer, before you pay for it.</p>
+    </details>
+    <details>
+      <summary>How do I pay?</summary>
+      <p>Email me and I'll send an invoice before any work starts — card or local
+        transfer, whichever is easier for you. The price is fixed up front, so there
+        are no hourly surprises at the end.</p>
+    </details>
+    <details>
+      <summary>I only want to talk, not buy a package.</summary>
+      <p>That's fine — tell me what's happening and I'll tell you honestly whether
+        it needs a paid fix or just a five-minute answer. No pressure, no upsell.</p>
+    </details>
+    <details>
+      <summary>Do you keep my data or my keys?</summary>
+      <p>No. Secrets found during an audit are reported as evidence, never stored
+        elsewhere, and I recommend you rotate anything exposed. Access is revoked
+        when the work ends.</p>
+    </details>
+  </div>
+</section>
+
+<section class="wrap cta">
+  <h2><span class="num">08</span> Find out what's actually broken</h2>
+  <p class="lede">A $150 audit, 48 hours, a written report. Money back if there's
+    nothing serious in it.</p>
+  <div class="btns">
+    <a class="btn" href="mailto:asepp.saepudiin@gmail.com?subject=Vibe%20Code%20Rescue%20-%20audit">Start the $150 audit</a>
+    <a class="btn btn-yellow" href="mailto:asepp.saepudiin@gmail.com?subject=Vibe%20Code%20Rescue%20-%20question">Email me first</a>
+  </div>
+  <p class="paynote">Each button opens an email with the subject already filled in —
+    tell me what's happening with your app and I'll take it from there.</p>
+</section>
+
+</main>
+
+<footer>
+  <div class="inner">
+    <p class="honest"><b>Honest note:</b> this service just opened. There are no
+      testimonials on this page because there are no clients to quote yet — I'm not
+      going to invent any. The money-back guarantee is what stands in their place.</p>
+    <p>Vibe Code Rescue · Asep Saepudin · Tangerang Selatan, Indonesia</p>
+    <div class="foot-links">
+      <a href="mailto:asepp.saepudiin@gmail.com">asepp.saepudiin&#64;gmail.com</a>
+      <a href="/case-study/">Case study</a>
+      <a href="https://github.com/soyuzalpha" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://linkedin.com/in/aseppp" target="_blank" rel="noopener">LinkedIn</a>
+      <a href="https://profile.soyuz.my.id" target="_blank" rel="noopener">Portfolio</a>
+    </div>
+  </div>
+</footer>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ProfessionalService",
+  "name": "Vibe Code Rescue",
+  "url": "https://rescue.soyuz.my.id/",
+  "description": "48-hour audit and repair service for AI-built web applications: leaked API keys, broken authentication, deploy and DNS problems, non-working forms, and silently failing integrations.",
+  "image": "https://rescue.soyuz.my.id/og.png",
+  "areaServed": "Worldwide",
+  "availableLanguage": ["en", "id"],
+  "provider": {
+    "@type": "Person",
+    "name": "Asep Saepudin",
+    "jobTitle": "Frontend Developer",
+    "email": "asepp.saepudiin@gmail.com",
+    "address": { "@type": "PostalAddress", "addressLocality": "Tangerang Selatan", "addressCountry": "ID" },
+    "sameAs": [
+      "https://github.com/soyuzalpha",
+      "https://linkedin.com/in/aseppp",
+      "https://profile.soyuz.my.id"
+    ]
+  },
+  "hasOfferCatalog": {
+    "@type": "OfferCatalog",
+    "name": "Vibe Code Rescue services",
+    "itemListElement": [
+      {
+        "@type": "Offer",
+        "name": "48-hour audit",
+        "description": "Read-only audit of an AI-built app, delivered as a written report within 48 hours. Money back if nothing serious is found.",
+        "price": "150",
+        "priceCurrency": "USD"
+      },
+      {
+        "@type": "Offer",
+        "name": "Rescue Fix",
+        "description": "One week of fixes for the critical findings: leaked secrets rotated, auth repaired, deploy and env corrected, forms and integrations made to work.",
+        "priceSpecification": {
+          "@type": "PriceSpecification",
+          "minPrice": "600",
+          "maxPrice": "1200",
+          "priceCurrency": "USD"
+        }
+      },
+      {
+        "@type": "Offer",
+        "name": "Keep-Alive Retainer",
+        "description": "Ongoing uptime and error monitoring, a monthly security and dependency check, and a set number of fix hours each month.",
+        "price": "300",
+        "priceCurrency": "USD"
+      }
+    ]
+  }
+}
+</script>
+
+</body>
+</html>
