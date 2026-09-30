@@ -1,0 +1,3 @@
+# cloudflared tunnel config: holds the tunnel id and the credentials-file path.
+# Never commit it — the repo is public.
+internal/cloudflared-config.yml.new
